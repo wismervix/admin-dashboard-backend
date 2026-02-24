@@ -12,6 +12,8 @@ Route::get('/test', function () {
 
 Route::controller(UserController::class)->group(function () {
     Route::get('/users', 'index');
+    Route::put('/users/{id}', 'update');
+    Route::delete('/users/{id}', 'destroy');
 });
 
 Route::controller(ProductController::class)->group(function () {
