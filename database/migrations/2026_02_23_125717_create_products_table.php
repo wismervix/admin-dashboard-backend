@@ -36,7 +36,7 @@ return new class extends Migration
             $table->json('reviews')->nullable();
             $table->json('meta')->nullable();
 
-            $table->string('thumbnail', 255)->nullable();
+            $table->text('thumbnail')->nullable();
             $table->timestamps(); // created_at and updated_at
         });
     }
