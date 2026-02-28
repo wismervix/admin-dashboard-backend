@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class UserController extends Controller
 {
@@ -12,6 +13,36 @@ class UserController extends Controller
     {
         return response()->json([
             'users' => User::all(),
+        ]);
+    }
+
+    /**
+     * PUT /products/{product}/images
+     * Upload Images
+     */
+    public function uploadImages(Request $request, User $user)
+    {
+        /*
+    | UPDATE IMAGE
+    */
+        if ($request->hasFile('image')) {
+
+            if ($user->image) {
+                $old = str_replace('/storage/', '', $user->image);
+                Storage::disk('public')->delete($old);
+            }
+
+            $path = $request->file('image')
+                ->store('', 'public');
+
+            $user->image = $path;
+        }
+
+        $user->save();
+
+        return response()->json([
+            'message' => 'Images synced',
+            'user' => $user->fresh()
         ]);
     }
 

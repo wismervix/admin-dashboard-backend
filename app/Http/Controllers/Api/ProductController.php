@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
 {
@@ -42,6 +43,67 @@ class ProductController extends Controller
             'message' => 'Product created successfully',
             'product' => $product,
         ], 201);
+    }
+
+    /**
+     * PUT /products/{product}/images
+     * Upload Images
+     */
+    public function uploadImages(Request $request, Product $product)
+    {
+        $images = $product->images ?? [];
+
+        /*
+    | DELETE REMOVED IMAGES
+    */
+        if ($request->has('removedImages')) {
+
+            foreach ($request->removedImages as $removed) {
+                Storage::disk('public')->delete($removed);
+            }
+
+            $images = array_values(array_filter(
+                $images,
+                fn($img) => !in_array($img, $request->removedImages)
+            ));
+        }
+
+        /*
+    | UPDATE THUMBNAIL
+    */
+        if ($request->hasFile('thumbnail')) {
+
+            if ($product->thumbnail) {
+                $old = str_replace('/storage/', '', $product->thumbnail);
+                Storage::disk('public')->delete($old);
+            }
+
+            $path = $request->file('thumbnail')
+                ->store('', 'public');
+
+            $product->thumbnail = $path;
+        }
+
+        /*
+    | ADD NEW IMAGES
+    */
+        if ($request->hasFile('images')) {
+
+            foreach ($request->file('images') as $file) {
+
+                $path = $file->store('', 'public');
+
+                $images[] = $path;
+            }
+        }
+
+        $product->images = array_values($images);
+        $product->save();
+
+        return response()->json([
+            'message' => 'Images synced',
+            'product' => $product->fresh()
+        ]);
     }
 
     /**
